@@ -2,11 +2,28 @@
     "configurations": [
         {
             "type": "java",
+            "name": "EurekaServerApplication",
+            "request": "launch",
+            "mainClass": "com.naro.eureka_server.EurekaServerApplication",
+            "projectName": ""
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-ConfigServerApplication<configServer>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.naro.configServer.ConfigServerApplication",
             "projectName": "configServer",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-EurekaServerApplication<eureka-server>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.naro.eureka_server.EurekaServerApplication",
+            "projectName": "eureka-server",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         }
