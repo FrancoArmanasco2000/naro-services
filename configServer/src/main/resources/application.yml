@@ -1,0 +1,15 @@
+server:
+    port: 8081
+
+spring:
+    application:
+        name: config-server
+
+    cloud:
+        config:
+            server:
+                git:
+                    uri: ${CONFIG_REPO_URL}
+                    search-paths: config-data
+                    username: ${GIT_USERNAME}
+                    password: ${GIT_TOKEN}
