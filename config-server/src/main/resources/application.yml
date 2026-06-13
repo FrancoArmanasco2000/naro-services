@@ -1,0 +1,21 @@
+server:
+port: 8888
+
+spring:
+application:
+name: config-server
+cloud:
+config:
+server:
+git:
+uri: ${CONFIG_REPO_URL}
+search-paths: config-data
+username: ${GIT_USERNAME}
+password: ${GIT_TOKEN}
+default-label: main
+clone-on-start: true
+
+eureka:
+client:
+serviceUrl:
+defaultZone: http://localhost:8761/eureka/
