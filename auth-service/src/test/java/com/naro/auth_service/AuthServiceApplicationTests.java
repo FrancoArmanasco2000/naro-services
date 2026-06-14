@@ -1,10 +1,10 @@
-package com.naro.configServer;
+package com.naro.auth_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ConfigServerApplicationTests {
+class AuthServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
