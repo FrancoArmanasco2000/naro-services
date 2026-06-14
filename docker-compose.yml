@@ -1,0 +1,61 @@
+services:
+
+  eureka-server:
+    image: armanasco2000/naro-eureka-server:latest
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  config-server:
+    image: armanasco2000/naro-config-server:latest
+    ports:
+      - "8888:8888"
+    environment:
+      - CONFIG_REPO_URL=${CONFIG_REPO_URL}
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_TOKEN=${GIT_TOKEN}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  auth-service:
+    image: armanasco2000/naro-auth-service:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+      - COOKIE_SECURE=${COOKIE_SECURE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  api-gateway:
+    image: armanasco2000/naro-api-gateway:latest
+    ports:
+      - "8443:8443"
+    environment:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      config-server:
+        condition: service_healthy
