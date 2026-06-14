@@ -12,6 +12,8 @@ import com.naro.auth_service.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -107,7 +109,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void issueTokenCookie(User user, HttpServletResponse response) {
-        String accessToken = jwtService.generateToken(user);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("nombre", user.getNombre());
+        String accessToken = jwtService.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.create(user);
 
         CookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE, accessToken, jwtExpiration / 1000, cookieSecure);
