@@ -2,7 +2,7 @@ package com.naro.auth_service.service;
 
 import com.naro.auth_service.dto.AuthResponse;
 import com.naro.auth_service.dto.LoginRequest;
-import com.naro.auth_service.dto.RegisterReguest;
+import com.naro.auth_service.dto.RegisterRequest;
 import com.naro.auth_service.entity.RefreshToken;
 import com.naro.auth_service.entity.Role;
 import com.naro.auth_service.entity.User;
@@ -44,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponse register(RegisterReguest request, HttpServletResponse response) {
+    public AuthResponse register(RegisterRequest request, HttpServletResponse response) {
         if(!request.getPassword().equals(request.getConfirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las contraseñas no coinciden");
         }

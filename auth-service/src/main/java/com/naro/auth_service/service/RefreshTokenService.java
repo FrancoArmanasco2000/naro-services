@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -58,6 +59,12 @@ public class RefreshTokenService {
     @Transactional
     public void revokeAllByUser(User user) {
         refreshTokenRepository.revokeAllByUser(user);
+    }
+
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void cleanExpiredTokens() {
+        refreshTokenRepository.deleteExpiredAndRevoked(Instant.now());
     }
 
 }

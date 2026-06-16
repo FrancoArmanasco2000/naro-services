@@ -2,7 +2,7 @@ package com.naro.auth_service.controller;
 
 import com.naro.auth_service.dto.AuthResponse;
 import com.naro.auth_service.dto.LoginRequest;
-import com.naro.auth_service.dto.RegisterReguest;
+import com.naro.auth_service.dto.RegisterRequest;
 import com.naro.auth_service.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
-        @Valid @RequestBody RegisterReguest request,
+        @Valid @RequestBody RegisterRequest request,
         HttpServletResponse response
         ) {
         return ResponseEntity.ok(authService.register(request, response));
