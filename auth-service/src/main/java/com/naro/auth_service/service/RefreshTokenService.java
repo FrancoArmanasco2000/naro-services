@@ -6,8 +6,9 @@ import com.naro.auth_service.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,7 +27,7 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken create(User user) {
-        refreshTokenRepository.revokeAllByUser(user);
+        refreshTokenRepository.deleteAllByUser(user);
         return refreshTokenRepository.save(
             RefreshToken.builder()
                 .user(user)
@@ -42,29 +43,25 @@ public class RefreshTokenService {
 
     public RefreshToken verify(String tokenValue) {
         RefreshToken token = refreshTokenRepository.findByToken(tokenValue)
-            .orElseThrow( () ->
-                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token invalido")
-                );
+            .orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token invalido"));
 
-        if(token.isRevoked() || token.getExpiryDate().isBefore(Instant.now())) {
-            if(!token.isRevoked()) {
-                token.setRevoked(true);
-                refreshTokenRepository.save(token);
-            }
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expirado ou revogado");
+        if (token.getExpiryDate().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(token);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expirado");
         }
         return token;
     }
 
     @Transactional
-    public void revokeAllByUser(User user) {
-        refreshTokenRepository.revokeAllByUser(user);
+    public void deleteAllByUser(User user) {
+        refreshTokenRepository.deleteAllByUser(user);
     }
 
-    @Scheduled(cron = "0 0 3 * * *")
+    @EventListener(ApplicationReadyEvent.class)
     @Transactional
-    public void cleanExpiredTokens() {
-        refreshTokenRepository.deleteExpiredAndRevoked(Instant.now());
+    public void cleanExpiredOnStartup() {
+        refreshTokenRepository.deleteExpired(Instant.now());
     }
 
 }

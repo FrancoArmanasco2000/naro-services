@@ -100,8 +100,7 @@ public class AuthServiceImpl implements AuthService {
 
         CookieUtil.getCookieValue(request, CookieUtil.REFRESH_TOKEN_COOKIE)
             .flatMap(refreshTokenService::findByToken)
-            .filter(rt -> !rt.isRevoked())
-            .ifPresent(rt -> refreshTokenService.revokeAllByUser(rt.getUser()));
+            .ifPresent(rt -> refreshTokenService.deleteAllByUser(rt.getUser()));
 
         CookieUtil.clearCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE, cookieSecure);
         CookieUtil.clearCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE, cookieSecure);
