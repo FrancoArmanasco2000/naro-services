@@ -1,5 +1,6 @@
 package com.naro.auth_service.service;
 
+import com.naro.auth_service.config.JwtProperties;
 import com.naro.auth_service.dto.AuthResponse;
 import com.naro.auth_service.dto.LoginRequest;
 import com.naro.auth_service.dto.RegisterRequest;
@@ -32,12 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
-
-    @Value("${application.security.jwt.expiration}")
-    private Long jwtExpiration;
-
-    @Value("${application.security.jwt.refresh-expiration}")
-    private Long refreshExpiration;
+    private final JwtProperties jwtProperties;
 
     @Value("${application.security.cookie.secure:false}")
     private boolean cookieSecure;
@@ -113,8 +109,8 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.create(user);
 
-        CookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE, accessToken, jwtExpiration / 1000, cookieSecure);
-        CookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE, refreshToken.getToken(), refreshExpiration / 1000, cookieSecure);
+        CookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE, accessToken, jwtProperties.getExpiration() / 1000, cookieSecure);
+        CookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE, refreshToken.getToken(), jwtProperties.getRefreshExpiration() / 1000, cookieSecure);
     }
 
     private AuthResponse toAuthResponse(User user) {
