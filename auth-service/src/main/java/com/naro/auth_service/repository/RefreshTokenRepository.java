@@ -15,6 +15,8 @@ import java.util.Optional;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
+    // NOTE: `token` here is the SHA-256 hex hash of the raw refresh token,
+    // never the raw value itself — hashing happens in RefreshTokenService.
     Optional<RefreshToken> findByToken(String token);
 
     @Modifying

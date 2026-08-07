@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,21 +31,33 @@ public class RefreshTokenService {
     @Transactional
     public RefreshToken create(User user) {
         refreshTokenRepository.deleteAllByUser(user);
-        return refreshTokenRepository.save(
+        String rawToken = UUID.randomUUID().toString();
+        RefreshToken saved = refreshTokenRepository.save(
             RefreshToken.builder()
                 .user(user)
-                .token(UUID.randomUUID().toString())
+                .token(hashToken(rawToken))
                 .expiryDate(Instant.now().plusMillis(refreshExpiration))
                 .build()
         );
+        // Return a transient (unmanaged) copy exposing the RAW token to the
+        // caller — e.g. for the response cookie — while only the hash is
+        // ever persisted. This object is intentionally not the managed
+        // entity, so mutating its `token` field can't cause Hibernate to
+        // flush the raw value back over the stored hash.
+        return RefreshToken.builder()
+            .id(saved.getId())
+            .user(saved.getUser())
+            .token(rawToken)
+            .expiryDate(saved.getExpiryDate())
+            .build();
     }
 
-    public Optional<RefreshToken> findByToken(String token) {
-        return refreshTokenRepository.findByToken(token);
+    public Optional<RefreshToken> findByToken(String rawToken) {
+        return refreshTokenRepository.findByToken(hashToken(rawToken));
     }
 
     public RefreshToken verify(String tokenValue) {
-        RefreshToken token = refreshTokenRepository.findByToken(tokenValue)
+        RefreshToken token = refreshTokenRepository.findByToken(hashToken(tokenValue))
             .orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token invalido"));
 
@@ -51,6 +66,20 @@ public class RefreshTokenService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expirado");
         }
         return token;
+    }
+
+    private String hashToken(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hashBytes.length * 2);
+            for (byte b : hashBytes) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
     }
 
     @Transactional

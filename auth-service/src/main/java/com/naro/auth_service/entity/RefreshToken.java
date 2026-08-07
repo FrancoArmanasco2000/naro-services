@@ -19,7 +19,11 @@ public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true, nullable = false, length = 36)
+    /**
+     * SHA-256 hex-encoded hash of the raw refresh token. The raw token is
+     * never persisted — only this hash is stored/looked up in the database.
+     */
+    @Column(unique = true, nullable = false, length = 64)
     private String token;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
