@@ -1,3 +1,5 @@
 launch.json
 .env
+_env
 .claude
+.DS_Store
