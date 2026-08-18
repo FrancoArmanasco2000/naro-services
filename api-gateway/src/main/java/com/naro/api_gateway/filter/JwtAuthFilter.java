@@ -57,9 +57,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
             ServerWebExchange mutated = exchange.mutate()
                     .request(r -> r.headers(headers -> {
-                        headers.set("X-User-Id", claims.getSubject());
-                        String email = claims.get("email", String.class);
-                        if (email != null) headers.set("X-User-Email", email);
+                        Long userId = claims.get("id", Long.class);
+                        if (userId != null) headers.set("X-User-Id", userId.toString());
+                        // El subject del token es el email (User.getUsername() lo devuelve
+                        // así) -> lo forwardeamos directo, no depende de un claim aparte.
+                        headers.set("X-User-Email", claims.getSubject());
                         String role = claims.get("role", String.class);
                         if (role != null) headers.set("X-User-Role", role);
                     }))

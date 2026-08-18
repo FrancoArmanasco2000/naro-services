@@ -44,6 +44,8 @@ services:
       - JWT_EXPIRATION=${JWT_EXPIRATION}
       - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
       - COOKIE_SECURE=${COOKIE_SECURE}
+      - SERVICES_USER_SERVICE_URL=http://user-service:8082
+      - INTERNAL_SERVICE_SECRET=${INTERNAL_SERVICE_SECRET}
     depends_on:
       config-server:
         condition: service_healthy
@@ -56,6 +58,21 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL_USERSERVICE=${DB_URL_USERSERVICE}
+      - DB_USERNAME_USERSERVICE=${DB_USERNAME_USERSERVICE}
+      - DB_PASSWORD_USERSERVICE=${DB_PASSWORD_USERSERVICE}
+      - INTERNAL_SERVICE_SECRET=${INTERNAL_SERVICE_SECRET}
     depends_on:
       config-server:
         condition: service_healthy
