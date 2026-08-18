@@ -21,6 +21,10 @@ public class RegisterRequest {
     private LocalDate fechaNacimiento;
     @NotBlank
     private String genero;
+    // Ubicacion: opcional, se puede completar despues desde el perfil.
+    private String ciudad;
+    private String provincia;
+    private String pais;
     @NotBlank
     @Email
     private String email;

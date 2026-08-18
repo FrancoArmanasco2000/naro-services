@@ -122,6 +122,9 @@ public class AuthServiceImpl implements AuthService {
             .fechaNacimiento(request.getFechaNacimiento())
             .genero(request.getGenero())
             .email(request.getEmail())
+            .ciudad(request.getCiudad())
+            .provincia(request.getProvincia())
+            .pais(request.getPais())
             .build();
 
         try {
