@@ -23,6 +23,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
@@ -130,6 +131,14 @@ public class AuthServiceImpl implements AuthService {
                 .body(perfilRequest)
                 .retrieve()
                 .toBodilessEntity();
+        } catch (HttpClientErrorException e) {
+            // user-service rechazo los datos (ej. DNI duplicado) -> no es un
+            // problema transitorio, reintentar no lo va a arreglar.
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "No se pudo completar el registro: el DNI ingresado ya está en uso",
+                e
+            );
         } catch (RestClientException e) {
             throw new ResponseStatusException(
                 HttpStatus.SERVICE_UNAVAILABLE,

@@ -1,6 +1,7 @@
 package com.naro.user_service.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +23,15 @@ public class GlobalExceptionHandler {
             .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         return ResponseEntity.badRequest().body(errors);
+    }
+
+    // El unico constraint de unicidad de Usuario aparte de la PK es el DNI,
+    // asi que un choque de esta excepcion siempre es DNI duplicado hoy.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(Map.of("error", "El DNI ingresado ya está registrado"));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
