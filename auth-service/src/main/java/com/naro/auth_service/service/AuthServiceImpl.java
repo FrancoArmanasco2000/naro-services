@@ -2,6 +2,7 @@ package com.naro.auth_service.service;
 
 import com.naro.auth_service.config.JwtProperties;
 import com.naro.auth_service.dto.AuthResponse;
+import com.naro.auth_service.dto.CrearUsuarioRequest;
 import com.naro.auth_service.dto.LoginRequest;
 import com.naro.auth_service.dto.RegisterRequest;
 import com.naro.auth_service.entity.RefreshToken;
@@ -22,6 +23,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -34,9 +37,13 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final JwtProperties jwtProperties;
+    private final RestClient userServiceRestClient;
 
     @Value("${application.security.cookie.secure:false}")
     private boolean cookieSecure;
+
+    @Value("${application.security.internal-secret}")
+    private String internalSecret;
 
     @Override
     @Transactional
@@ -57,6 +64,8 @@ public class AuthServiceImpl implements AuthService {
             .build();
 
         userRepository.save(user);
+
+        crearPerfilUsuario(user, request);
 
         issueTokenCookie(user, response);
 
@@ -103,9 +112,37 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    private void crearPerfilUsuario(User user, RegisterRequest request) {
+        CrearUsuarioRequest perfilRequest = CrearUsuarioRequest.builder()
+            .id(user.getId())
+            .nombre(request.getNombre())
+            .apellido(request.getApellido())
+            .dni(request.getDni())
+            .fechaNacimiento(request.getFechaNacimiento())
+            .genero(request.getGenero())
+            .email(request.getEmail())
+            .build();
+
+        try {
+            userServiceRestClient.post()
+                .uri("/api/usuarios")
+                .header("X-Internal-Secret", internalSecret)
+                .body(perfilRequest)
+                .retrieve()
+                .toBodilessEntity();
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "No se pudo completar el registro, intentá de nuevo en unos minutos",
+                e
+            );
+        }
+    }
+
     private void issueTokenCookie(User user, HttpServletResponse response) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("nombre", user.getNombre());
+        extraClaims.put("id", user.getId());
+        extraClaims.put("role", user.getRole().name());
         String accessToken = jwtService.generateToken(extraClaims, user);
         RefreshToken refreshToken = refreshTokenService.create(user);
 
