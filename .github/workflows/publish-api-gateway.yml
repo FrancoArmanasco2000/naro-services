@@ -1,0 +1,48 @@
+name: Publish api-gateway image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api-gateway/**'
+      - '.github/workflows/publish-api-gateway.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: api-gateway/pom.xml
+
+      - name: Compilar el jar
+        working-directory: api-gateway
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Login a Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build y push de la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api-gateway
+          push: true
+          tags: |
+            armanasco2000/naro-api-gateway:latest
+            armanasco2000/naro-api-gateway:${{ github.sha }}
