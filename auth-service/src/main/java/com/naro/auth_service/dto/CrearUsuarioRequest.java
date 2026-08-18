@@ -25,5 +25,8 @@ public class CrearUsuarioRequest {
     private LocalDate fechaNacimiento;
     private String genero;
     private String email;
+    private String ciudad;
+    private String provincia;
+    private String pais;
 
 }
